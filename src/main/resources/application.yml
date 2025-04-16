@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: red-social
+    jackson:
+      default-property-inclusion: non_null
+      property-naming-strategy: SNAKE_CASE
+  datasource:
+      url: jdbc:mysql://localhost:3306/red_social_intereses_comunes
+      username: root
+      password: 12345678
+      driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+      show-sql: true
+      hibernate:
+        ddl-auto: create
+  logging:
+    level:
+      org.hibernate.SQL: debug
+
+
+jwt:
+  secret:
+    key:
+      private: DLi8EXyQQkB89la1EOeDgBWux/SNJALhtkDzWzSBqtU=
+  time:
+    expiration: 1800000
+
+security:
+  jwt:
+    user:
+      generator: AUTHOJWT-BACKEND
+
