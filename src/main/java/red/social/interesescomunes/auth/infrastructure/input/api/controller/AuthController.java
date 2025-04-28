@@ -21,13 +21,13 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/sing-in")
+    @PostMapping("/sign-in")
     public ResponseEntity<AuthUserResponse> userLogin(@RequestBody AuthUserRequest authUserRequest) throws AuthenticationException {
         AuthUserResponse authUserResponse = this.authService.userLogin(authUserRequest);
         return ResponseEntity.status(HttpStatus.OK).body(authUserResponse);
     }
 
-    @PostMapping("/sing-out")
+    @PostMapping("/sign-out")
     public ResponseEntity<?> userLogout(){
         return null;
     }

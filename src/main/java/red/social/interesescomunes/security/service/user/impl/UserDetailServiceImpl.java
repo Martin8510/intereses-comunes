@@ -46,18 +46,17 @@ public class UserDetailServiceImpl implements IAuthSecurityService {
 
     @Override
     public AuthUserResponse authenticateAndGenerateToken(AuthUserRequest request) throws AuthenticationException {
-        String userName = request.getUserName();
-        String password = request.getPassword();
-        // Autenticar al usuario
-        Authentication authentication = this.verifyCredentials(userName, password);
+         // Autenticar al usuario
+        Authentication authentication = this.verifyCredentials(request.getUserName(), request.getPassword());
         // Establecer el contexto de seguridad
         SecurityContextHolder.getContext().setAuthentication(authentication);
         // Generar el token JWT
         String accessToken = this.jwtUtils.generateJwtToken(authentication);
+        UserEntity user = this.getUserByIdentifier(request.getUserName());
         // Retornar la respuesta
         return new AuthUserResponse(
-                userName,
-                password,
+                user.getUserName(),
+                user.getPassword(),
                 accessToken,
                 "Usuario autenticado exitosamente"
             );
@@ -96,8 +95,7 @@ public class UserDetailServiceImpl implements IAuthSecurityService {
 
     @Override
     public UserEntity getUserByIdentifier(String userName) throws UserNotFoundException {
-        System.out.println("this.userService.findUserByUserName(username)" + this.userService.findUserByUserName(userName));
-        return this.mapper.toEntity(this.userService.findUserByUserName(userName)) ;
+      return this.mapper.toEntity(this.userService.findUserByUserName(userName)) ;
     }
 
     @Override

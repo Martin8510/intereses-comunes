@@ -10,16 +10,22 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import red.social.interesescomunes.role.domain.enums.TypeRole;
 import red.social.interesescomunes.security.filters.JwtTokenValidator;
 import red.social.interesescomunes.security.jwt.impl.JwtUtilsImpl;
 import red.social.interesescomunes.security.model.Permission;
 import red.social.interesescomunes.security.service.user.impl.UserDetailServiceImpl;
+
+import java.util.Arrays;
 
 
 @Configuration
@@ -36,29 +42,61 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-        .csrf(csrf -> csrf.disable())
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-        // 1. Rutas públicas
-        .requestMatchers("/api/v1/auth/**").permitAll()
-        .requestMatchers("/api/v1/role/**").permitAll()
-        .requestMatchers("/api/v1/member/**").permitAll()
-        .requestMatchers("/api/v1/admin/**").permitAll()
-        .requestMatchers("/api/v1/category/**").permitAll()
-        // 2. Rutas con roles específicos
-        .requestMatchers(HttpMethod.DELETE, "/api/v1/admin/delete/{id}").hasAnyAuthority(Permission.DELETE.name(),Permission.ALL.name())
-        .requestMatchers(HttpMethod.POST, "/api/v1/group/create/{id}").hasAnyRole(TypeRole.MIEMBRO.name(), TypeRole.PROPIETARIO.name())
-        .requestMatchers(HttpMethod.PUT,"/api/v1/group/update/{id}").hasAnyRole(TypeRole.PROPIETARIO.name())
-      //  .requestMatchers("/api/v1/category/**").hasRole(TypeRole.ADMINISTRADOR.name())
-        // 3. Catch-all: cualquier otra ruta
-        .anyRequest().authenticated())
-        .addFilterBefore(new JwtTokenValidator(this.jwtUtils), UsernamePasswordAuthenticationFilter.class)
-        .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                .cors(cors -> cors.configurationSource(this.corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> {
+                    configurePublicRoutes(auth);
+                    configureProtectedRoutes(auth);
+                    auth.anyRequest().authenticated();
                 })
-        );
+                .addFilterBefore(new JwtTokenValidator(this.jwtUtils), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
+                        )
+                );
         return http.build();
+    }
+
+
+    private void configurePublicRoutes(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        auth
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/role/**").permitAll()
+                .requestMatchers("/api/v1/member/**").permitAll()
+                .requestMatchers("/api/v1/admin/**").permitAll()
+                .requestMatchers("/api/v1/category/**").permitAll()
+                .requestMatchers("/api/v1/user/**").permitAll();
+    }
+
+    private void configureProtectedRoutes(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        auth
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/admin/delete/{id}")
+                .hasAnyAuthority(Permission.DELETE.name(), Permission.ALL.name())
+                .requestMatchers(HttpMethod.POST, "/api/v1/group/create/{id}")
+                .hasAnyRole(TypeRole.MIEMBRO.name(), TypeRole.PROPIETARIO.name())
+                .requestMatchers(HttpMethod.PUT, "/api/v1/group/update/{id}")
+                .hasAnyRole(TypeRole.PROPIETARIO.name());
+    }
+
+    // Configuración CORS
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",  // Para desarrollo con Vite
+                "http://127.0.0.1:5173",  // Alternativa localhost
+                "https://tudominio.com"   // Para producción
+        ));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // Tiempo de cache para config CORS
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
@@ -78,5 +116,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }
