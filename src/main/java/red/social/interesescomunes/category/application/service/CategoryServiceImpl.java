@@ -5,15 +5,17 @@ import org.springframework.transaction.annotation.Transactional;
 import red.social.interesescomunes.category.application.input.ICategoryServicePort;
 import red.social.interesescomunes.category.application.output.ICategoryPersistencePort;
 import red.social.interesescomunes.category.domain.event.ICategoryDomainEventPublisher;
+import red.social.interesescomunes.category.domain.exception.CategoryNameAlreadyExistsException;
 import red.social.interesescomunes.category.domain.exception.CategoryNotFoundException;
 import red.social.interesescomunes.category.domain.model.Category;
-
 import java.util.List;
+import java.util.Optional;
 
-@Service
+
 /**
  * Servicio de aplicación que implementa los casos de uso relacionados con las categorias.
  */
+@Service
 public class CategoryServiceImpl implements ICategoryServicePort {
     private final ICategoryPersistencePort repository;
     private final ICategoryDomainEventPublisher eventPublisher;
@@ -43,6 +45,15 @@ public class CategoryServiceImpl implements ICategoryServicePort {
     @Override
     @Transactional
     public Category createCategory(Category category) {
+
+        Optional<Category> categoryNameOptional =  this.repository.findByName(category.getName());
+
+        if(categoryNameOptional.isPresent()){
+            throw new CategoryNameAlreadyExistsException(
+                    "Ya existe una categoría con el nombre: " + category.getName()
+            );
+        }
+
         Category categoryCreated = this.repository.save(category);
         categoryCreated.create(this.eventPublisher);
         return categoryCreated;

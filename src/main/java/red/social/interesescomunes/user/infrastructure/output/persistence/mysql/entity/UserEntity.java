@@ -46,13 +46,13 @@ public class UserEntity {
     private LocalDateTime updatedAt;
 
     @Column(name = "account_no_expired")
-    private boolean isAccountNoExpired;
+    private boolean accountNoExpired;
 
     @Column(name = "account_no_locked")
-    private boolean isAccountNoLocked;
+    private boolean accountNoLocked;
 
     @Column(name = "credential_no_expired")
-    private boolean IsCredentialNoExpired;
+    private boolean credentialNoExpired;
 
     @ManyToMany(
             cascade = CascadeType.MERGE,

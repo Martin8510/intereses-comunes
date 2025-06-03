@@ -33,6 +33,12 @@ public class AdministratorPersistenceAdapter implements IAdministratorPersistenc
     }
 
     @Override
+    public Optional<Administrator> findByUserId(Long id) {
+        return jpaRepository.findByUserId(id)
+                .map(mapper::toDomain);
+    }
+
+    @Override
     public Administrator save(Administrator administrator) {
         AdministratorEntity adminEntity = this.mapper.toEntity(administrator);
         AdministratorEntity savedAdmin = this.jpaRepository.save(adminEntity);

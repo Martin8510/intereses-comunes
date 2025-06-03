@@ -10,4 +10,5 @@ public interface IGroupPersistencePort {
     Optional<Group> findById(Long id);
     Group save(Group group);
     void delete(Long id);
+    boolean existsByName(String name); // Nuevo método
 }

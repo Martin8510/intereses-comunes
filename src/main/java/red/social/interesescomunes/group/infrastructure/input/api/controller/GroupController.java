@@ -2,8 +2,12 @@ package red.social.interesescomunes.group.infrastructure.input.api.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import red.social.interesescomunes.file.application.input.IFileManagerPort;
+import red.social.interesescomunes.file.domain.model.StoredFile;
 import red.social.interesescomunes.group.application.input.IGroupServicePort;
 import red.social.interesescomunes.group.domain.model.Group;
 import red.social.interesescomunes.group.infrastructure.input.api.dto.request.GroupRequest;
@@ -17,10 +21,12 @@ import java.util.List;
 public class GroupController {
     private final IGroupServicePort service;
     private final IGroupRestMapper mapper;
+    private final IFileManagerPort fileService;
 
-    public GroupController(IGroupServicePort service, IGroupRestMapper mapper) {
+    public GroupController(IGroupServicePort service, IGroupRestMapper mapper, IFileManagerPort fileService) {
         this.service = service;
         this.mapper = mapper;
+        this.fileService = fileService;
     }
 
     @GetMapping("/find-all")
@@ -36,6 +42,28 @@ public class GroupController {
         GroupResponse response = this.mapper.toResponse(group);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @PostMapping(value = "/create-with-image/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GroupResponse> createGroupWithImage(
+            @PathVariable Long id,
+            @RequestPart("data") @Valid GroupRequest groupRequest,
+            @RequestPart(value = "imagenFile", required = false) MultipartFile imagenFile) throws Exception {
+
+        Group group = mapper.toDomain(groupRequest);
+
+        // Procesar imagen si existe
+        if (imagenFile != null && !imagenFile.isEmpty()) {
+            StoredFile storedFile = fileService.store(imagenFile, "groups");
+            group.setImageUrl(storedFile.getUrl());
+        } else if (groupRequest.getImageUrl() != null) {
+            group.setImageUrl(groupRequest.getImageUrl());
+        }
+
+        Group savedGroup = service.createGroup(id, group);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(mapper.toResponse(savedGroup));
+    }
+
 
     @PostMapping("/create/{id}")
     public ResponseEntity<GroupResponse> createGroup(@PathVariable Long id,@Valid @RequestBody GroupRequest groupRequest) {
@@ -59,5 +87,19 @@ public class GroupController {
     public ResponseEntity<String> deleteGroupById(@PathVariable Long id) {
         this.service.deleteGroupById(id);
         return ResponseEntity.status(HttpStatus.OK).body("Grupo eliminado.");
+    }
+
+    @PatchMapping("/activate/{id}")
+    public ResponseEntity<GroupResponse> activateGroup(@PathVariable Long id) {
+        Group group = this.service.activateGroup(id);
+        GroupResponse response = this.mapper.toResponse(group);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PatchMapping("/deactivate/{id}")
+    public ResponseEntity<GroupResponse> deactivateGroup(@PathVariable Long id) {
+        Group group = this.service.deactivateGroup(id);
+        GroupResponse response = this.mapper.toResponse(group);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

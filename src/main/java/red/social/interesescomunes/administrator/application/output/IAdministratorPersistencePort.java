@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface IAdministratorPersistencePort {
     List<Administrator> findAll();
     Optional<Administrator> findById(Long id);
+    Optional<Administrator> findByUserId(Long id);
     Administrator save(Administrator administrator);
     void delete(Long id);
 }

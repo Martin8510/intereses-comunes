@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface IMemberPersistencePort {
     List<Member> findAll();
     Optional<Member> findById(Long id);
+    Optional<Member> findByUserId(Long id);
     Member save(Member member);
     void delete(Long id);
 }

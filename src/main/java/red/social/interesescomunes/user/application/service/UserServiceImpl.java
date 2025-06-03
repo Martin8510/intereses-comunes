@@ -63,7 +63,7 @@ public class UserServiceImpl implements IUserServicePort {
         user.setCreatedAt(LocalDateTime.now());
         user.setAccountNoLocked(true);
         user.setAccountNoExpired(true);
-        user.setIsCredentialNoExpired(true);
+        user.setCredentialNoExpired(true);
         return user;
     }
 
@@ -81,8 +81,8 @@ public class UserServiceImpl implements IUserServicePort {
        existingUser.setRoles(user.getRoles());
        existingUser.setUpdatedAt(user.getUpdatedAt());
        existingUser.setAccountNoExpired(user.isAccountNoExpired());
-       existingUser.setAccountNoLocked(user.isIsCredentialNoExpired());
-       existingUser.setIsCredentialNoExpired(user.isIsCredentialNoExpired());
+       existingUser.setAccountNoLocked(user.isCredentialNoExpired());
+       existingUser.setCredentialNoExpired(user.isCredentialNoExpired());
        return existingUser;
     }
 
@@ -98,7 +98,7 @@ public class UserServiceImpl implements IUserServicePort {
         existingUser.setRoles(user.getRoles());
         existingUser.setUpdatedAt(user.getUpdatedAt());
         existingUser.setAccountNoExpired(user.isAccountNoExpired());
-        existingUser.setAccountNoLocked(user.isIsCredentialNoExpired());
-        existingUser.setIsCredentialNoExpired(user.isIsCredentialNoExpired());
+        existingUser.setAccountNoLocked(user.isAccountNoLocked());
+        existingUser.setCredentialNoExpired(user.isCredentialNoExpired());
     }
 }

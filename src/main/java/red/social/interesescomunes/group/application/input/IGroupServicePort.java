@@ -10,4 +10,6 @@ public interface IGroupServicePort {
     Group createGroup(Long id,Group group);
     Group updateGroup(Long id, Group group);
     void deleteGroupById(Long id);
+    Group activateGroup(Long id);
+    Group deactivateGroup(Long id);
 }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 import red.social.interesescomunes.category.domain.model.Category;
 import red.social.interesescomunes.group.domain.enums.GroupStatus;
 import red.social.interesescomunes.group.domain.event.IGroupDomainEventPublisher;

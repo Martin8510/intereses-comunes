@@ -23,8 +23,8 @@ public class User {
     private String password;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private boolean isAccountNoExpired;
-    private boolean isAccountNoLocked;
-    private boolean IsCredentialNoExpired;
+    private boolean accountNoExpired;
+    private boolean accountNoLocked;
+    private boolean credentialNoExpired;
     private List<Role> roles;
 }

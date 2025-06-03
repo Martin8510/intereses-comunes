@@ -43,4 +43,9 @@ public class GroupPersistenceAdapter implements IGroupPersistencePort {
     public void delete(Long id) {
         this.jpaRepository.deleteById(id);
     }
+
+    @Override
+    public boolean existsByName(String name) {
+        return this.jpaRepository.existsByName(name);
+    }
 }

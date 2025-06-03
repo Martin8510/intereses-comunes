@@ -19,8 +19,8 @@ public class UserResponse {
     private String address;
     private String email;
     private String password;
-    private boolean isAccountNoExpired;
-    private boolean isAccountNoLocked;
-    private boolean IsCredentialNoExpired;
+    private boolean accountNoExpired;
+    private boolean accountNoLocked;
+    private boolean credentialNoExpired;
     private List<RoleResponse> roles;
 }

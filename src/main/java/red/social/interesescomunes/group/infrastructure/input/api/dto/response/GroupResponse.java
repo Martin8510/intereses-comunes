@@ -3,6 +3,7 @@ package red.social.interesescomunes.group.infrastructure.input.api.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 import red.social.interesescomunes.category.infrastructure.input.api.dto.response.CategoryResponse;
 import red.social.interesescomunes.group.domain.enums.GroupStatus;
 import red.social.interesescomunes.owner.infrastructure.input.api.dto.response.OwnerResponse;

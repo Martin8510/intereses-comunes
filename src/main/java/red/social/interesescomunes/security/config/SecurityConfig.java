@@ -63,10 +63,9 @@ public class SecurityConfig {
     private void configurePublicRoutes(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers("/api/v1/role/**").permitAll()
                 .requestMatchers("/api/v1/member/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").permitAll()
-                .requestMatchers("/api/v1/category/**").permitAll()
+                .requestMatchers("/api/v1/role/**").permitAll()
                 .requestMatchers("/api/v1/user/**").permitAll();
     }
 
@@ -77,7 +76,17 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/group/create/{id}")
                 .hasAnyRole(TypeRole.MIEMBRO.name(), TypeRole.PROPIETARIO.name())
                 .requestMatchers(HttpMethod.PUT, "/api/v1/group/update/{id}")
-                .hasAnyRole(TypeRole.PROPIETARIO.name());
+                .hasAnyRole(TypeRole.PROPIETARIO.name(), TypeRole.MIEMBRO.name())
+                .requestMatchers(HttpMethod.PUT, "/api/v1/group/find-all")
+                .hasAnyRole(TypeRole.MIEMBRO.name(),TypeRole.PROPIETARIO.name())
+                .requestMatchers("api/v1/group-events/**")
+                .hasAnyRole(TypeRole.PROPIETARIO.name())
+                .requestMatchers("/api/v1/event-attendees/**")
+                .hasAnyRole(TypeRole.MIEMBRO.name())
+                .requestMatchers("/api/v1/member-group/**")
+                .hasAnyRole(TypeRole.MIEMBRO.name())
+                .requestMatchers("/api/v1/category/**")
+                .hasAnyRole(TypeRole.ADMINISTRADOR.name());
     }
 
     // Configuración CORS

@@ -73,29 +73,6 @@ public class GlobalControllerAdvice {
                 .build();
     }
 
-
-
-/*
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException exception){
-        BindingResult result = exception.getBindingResult();
-        List<String> listOfErrors = result.getFieldErrors()
-            .stream()
-            .map(fieldError -> fieldError.getDefaultMessage())
-            .toList();
-
-        return ErrorResponse.builder()
-            .exception(exception.getClass().getSimpleName())
-            .code(ErrorCatalog.INVALID_ROLE.getCode())
-            .message(ErrorCatalog.INVALID_ROLE.getMessage())
-            .details(listOfErrors)
-            .timestamp(LocalDateTime.now())
-            .build();
-    }
-*/
-
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException ex,

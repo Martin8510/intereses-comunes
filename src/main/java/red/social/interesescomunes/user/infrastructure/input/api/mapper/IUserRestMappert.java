@@ -14,10 +14,9 @@ public interface IUserRestMappert {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-
-    @Mapping(target = "isAccountNoExpired", ignore = true)
-    @Mapping(target = "isAccountNoLocked", ignore = true)
-    @Mapping(target = "IsCredentialNoExpired", ignore = true)
+    @Mapping(target = "accountNoExpired", ignore = true)
+    @Mapping(target = "accountNoLocked", ignore = true)
+    @Mapping(target = "credentialNoExpired", ignore = true)
 
     @Mapping(source = "roles", target = "roles")
     User toDomain(UserRequest request);

@@ -8,7 +8,9 @@ import red.social.interesescomunes.group.application.input.IGroupServicePort;
 import red.social.interesescomunes.group.application.output.IGroupPersistencePort;
 import red.social.interesescomunes.group.domain.enums.GroupStatus;
 import red.social.interesescomunes.group.domain.event.IGroupDomainEventPublisher;
+import red.social.interesescomunes.group.domain.exception.GroupAlreadyExistsException;
 import red.social.interesescomunes.group.domain.exception.GroupNotFoundException;
+import red.social.interesescomunes.group.domain.exception.IllegalGroupStateException;
 import red.social.interesescomunes.group.domain.model.Group;
 import red.social.interesescomunes.member.application.input.IMemberServicePort;
 import red.social.interesescomunes.member.domain.model.Member;
@@ -18,11 +20,10 @@ import red.social.interesescomunes.owner.domain.model.Owner;
 import red.social.interesescomunes.role.application.input.IRoleServicePort;
 import red.social.interesescomunes.role.domain.enums.TypeRole;
 import red.social.interesescomunes.role.domain.model.Role;
-import red.social.interesescomunes.user.domain.exception.UserNotFoundException;
 import red.social.interesescomunes.user.domain.model.User;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class GroupServiceImpl implements IGroupServicePort {
@@ -32,6 +33,7 @@ public class GroupServiceImpl implements IGroupServicePort {
     private final IOwnerServicePort ownerService;
     private final IGroupDomainEventPublisher eventPublisher;
     private final ICategoryServicePort categoryService;
+
 
     public GroupServiceImpl(IGroupPersistencePort groupRepository, IMemberServicePort memberService, IRoleServicePort roleService, IOwnerServicePort ownerService, IGroupDomainEventPublisher eventPublisher, ICategoryServicePort categoryService) {
         this.groupRepository = groupRepository;
@@ -56,12 +58,15 @@ public class GroupServiceImpl implements IGroupServicePort {
     @Override
     @Transactional
     public Group createGroup(Long id, Group group) {
+        if(this.groupRepository.existsByName(group.getName())){
+            throw new GroupAlreadyExistsException("Ya existe un grupo con el nombre: " + group.getName());
+        }
+        // buscamos la categoria y se la asignamos al grupo tematico
+        Category category = this.categoryService.findCategoryById(group.getCategory().getId());
         // iniciamos la creacion del grupo tematico y asignacion del usuario propietario
         Group groupAndAssignOwner = this.prepareGroupWithOwner(group,id);
         groupAndAssignOwner.setCreatedAt(LocalDateTime.now());
         groupAndAssignOwner.setUpdatedAt(LocalDateTime.now());
-        // buscamos la categoria y se la asignamos al grupo tematico
-        Category category = this.categoryService.findCategoryByName(group.getCategory().getName());
         group.setCategory(category);
         // Guardamos y publicamos el evento
         Group groupCreated = this.groupRepository.save(groupAndAssignOwner);
@@ -69,21 +74,33 @@ public class GroupServiceImpl implements IGroupServicePort {
         return groupCreated;
     }
 
+    @Transactional
     public Group prepareGroupWithOwner(Group group, Long idMember) {
         // Obtener miembro y usuario
-        Member member =  this.memberService.findMemberById(idMember);
+        Member member = this.memberService.findMemberById(idMember);
         User user = member.getUser();
-        // Actualizar roles del usuario (si no es ya propietario)
-        if(!this.hasOwnerRole(user)){
-            this.updateUserRoles(user);
+
+        // Verificar si ya existe un propietario para este usuario
+        Optional<Owner> existingOwner = this.ownerService.findOwnerByUserId(user.getId());
+
+        if(existingOwner.isPresent()) {
+            // Si ya existe un propietario, lo usamos
+            group.setOwner(existingOwner.get());
+        } else {
+            // Si no existe, actualizamos roles y creamos el propietario
+            if(!this.hasOwnerRole(user)){
+                this.updateUserRoles(user);
+            }
+            Owner owner = this.createOwner(user);
+            group.setOwner(owner);
         }
-        // Creamos el propietario
-        Owner owner =  this.ownerService.findOwnerByUserId(user.getId()).orElse(this.createOwner(user));
+
+        // Actualizar el miembro con los cambios de usuario
         member.setUser(user);
-        this.memberService.updateMember(idMember,member);
+        this.memberService.updateMember(idMember, member);
+
         // Se inicializa pendiente hasta que completa la pasarela de pagos.
         group.setStatus(GroupStatus.PENDIENTE);
-        group.setOwner(owner);
         return group;
     }
 
@@ -122,8 +139,8 @@ public class GroupServiceImpl implements IGroupServicePort {
         existingGroup.setDescription(group.getDescription());
         existingGroup.setLocation(group.getLocation());
         existingGroup.setImageUrl(group.getImageUrl());
-        existingGroup.setCategory(group.getCategory());
-        existingGroup.setOwner(group.getOwner());
+        Category category = this.categoryService.findCategoryById(group.getCategory().getId());
+        existingGroup.setCategory(category);
         existingGroup.setStatus(group.getStatus());
         existingGroup.setUpdatedAt(LocalDateTime.now());
         // Guardamos y publicamos el evento
@@ -137,7 +154,39 @@ public class GroupServiceImpl implements IGroupServicePort {
         Group existingGroup = this.groupRepository.findById(id)
                 .orElseThrow(() -> new GroupNotFoundException("No se encontró un grupo con el id " + id));
         // Eliminamos y publicamos el evento
-        this.groupRepository.delete(existingGroup.getId());
+        this.groupRepository.delete(id);
         existingGroup.delete(this.eventPublisher);
+    }
+
+    @Override
+    @Transactional
+    public Group activateGroup(Long id) {
+        Group group = this.findGroupById(id);
+        if(group.getStatus() == GroupStatus.ACTIVO) {
+            throw new IllegalGroupStateException("El grupo ya está activo");
+        }
+
+        group.setStatus(GroupStatus.ACTIVO);
+        group.setUpdatedAt(LocalDateTime.now());
+
+        Group activatedGroup = this.groupRepository.save(group);
+        activatedGroup.update(this.eventPublisher);
+        return activatedGroup;
+    }
+
+    @Override
+    @Transactional
+    public Group deactivateGroup(Long id) {
+        Group group = this.findGroupById(id);
+        if(group.getStatus() == GroupStatus.INACTIVO) {
+            throw new IllegalGroupStateException("El grupo ya está inactivo");
+        }
+
+        group.setStatus(GroupStatus.INACTIVO);
+        group.setUpdatedAt(LocalDateTime.now());
+
+        Group deactivatedGroup = this.groupRepository.save(group);
+        deactivatedGroup.update(this.eventPublisher);
+        return deactivatedGroup;
     }
 }

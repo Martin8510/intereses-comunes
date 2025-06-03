@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import red.social.interesescomunes.category.infrastructure.input.api.dto.request.CategoryRequest;
+import org.springframework.web.multipart.MultipartFile;
 import red.social.interesescomunes.group.domain.enums.GroupStatus;
 import red.social.interesescomunes.owner.infrastructure.input.api.dto.request.OwnerRequest;
 
@@ -25,13 +25,15 @@ public class GroupRequest {
     @NotBlank(message = "La ubicación no puede estar vacía.")
     private String location;
 
+    private MultipartFile imagenFile; // Campo para imagen (transient)
+
     @NotBlank(message = "La URL de la imagen no puede estar vacía.")
     @Size(max = 2083, message = "La URL de la imagen no puede tener más de 2083 caracteres.")
     private String imageUrl;
 
     @Valid
     @NotNull(message = "La categoría no puede ser nula.")
-    private CategoryRequest category;
+    private CategoryIdRequest category;
 
     private OwnerRequest owner;
 

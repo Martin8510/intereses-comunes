@@ -6,6 +6,8 @@ import red.social.interesescomunes.category.domain.model.Category;
 import red.social.interesescomunes.category.infrastructure.output.persistence.mapper.ICategoryPersistenceMapper;
 import red.social.interesescomunes.category.infrastructure.output.persistence.mysql.entity.CategoryEntity;
 import red.social.interesescomunes.category.infrastructure.output.persistence.mysql.repository.ICategoryJpaRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +20,8 @@ import java.util.Optional;
 public class CategoryPersistenceAdapter implements ICategoryPersistencePort {
     private final ICategoryJpaRepository jpaRepository;
     private final ICategoryPersistenceMapper mapper;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public CategoryPersistenceAdapter(ICategoryJpaRepository jpaRepository, ICategoryPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
@@ -38,12 +42,16 @@ public class CategoryPersistenceAdapter implements ICategoryPersistencePort {
 
     @Override
     public Optional<Category> findByName(String name) {
+        entityManager.flush();
+        entityManager.clear();
         return this.jpaRepository.findByName(name)
                 .map(mapper::toDomain);
     }
 
     @Override
     public Category save(Category category) {
+        entityManager.flush();
+        entityManager.clear();
         CategoryEntity categoryEntity = this.mapper.toEntity(category);
         CategoryEntity savedCategory = this.jpaRepository.save(categoryEntity);
         return this.mapper.toDomain(savedCategory);

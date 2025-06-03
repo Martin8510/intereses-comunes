@@ -1,5 +1,7 @@
 package red.social.interesescomunes.security.service.user.impl;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -10,9 +12,16 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+
+import red.social.interesescomunes.administrator.application.output.IAdministratorPersistencePort;
+import red.social.interesescomunes.administrator.domain.model.Administrator;
 import red.social.interesescomunes.auth.infrastructure.input.api.dto.request.AuthUserRequest;
 import red.social.interesescomunes.auth.infrastructure.input.api.dto.response.AuthUserResponse;
-
+import red.social.interesescomunes.member.application.output.IMemberPersistencePort;
+import red.social.interesescomunes.member.domain.model.Member;
+import red.social.interesescomunes.owner.application.output.IOwnerPersistencePort;
+import red.social.interesescomunes.owner.domain.model.Owner;
 import red.social.interesescomunes.security.jwt.impl.JwtUtilsImpl;
 import red.social.interesescomunes.security.service.api.IAuthSecurityService;
 import red.social.interesescomunes.security.service.password.BCryptPasswordVerificationService;
@@ -28,21 +37,16 @@ import java.util.Collection;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserDetailServiceImpl implements IAuthSecurityService {
-   private JwtUtilsImpl jwtUtils;
+   private final JwtUtilsImpl jwtUtils;
    private final BCryptPasswordVerificationService verificationPasswordService;
    private final IUserServicePort userService;
    private final IUserPersistenceMapper mapper;
+   private final IMemberPersistencePort memberPersistencePort;
+   private final IOwnerPersistencePort ownerPersistencePort;
+   private final IAdministratorPersistencePort administratorPersistencePort;
    private static final boolean ACCOUNT_ENABLED = true;
-
-    public UserDetailServiceImpl(BCryptPasswordVerificationService verificationPasswordService,
-                                 IUserServicePort userService, IUserPersistenceMapper mapper,
-                                 JwtUtilsImpl jwtUtils) {
-        this.verificationPasswordService = verificationPasswordService;
-        this.userService = userService;
-        this.mapper = mapper;
-        this.jwtUtils = jwtUtils;
-    }
 
     @Override
     public AuthUserResponse authenticateAndGenerateToken(AuthUserRequest request) throws AuthenticationException {
@@ -52,14 +56,26 @@ public class UserDetailServiceImpl implements IAuthSecurityService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         // Generar el token JWT
         String accessToken = this.jwtUtils.generateJwtToken(authentication);
-        UserEntity user = this.getUserByIdentifier(request.getUserName());
-        // Retornar la respuesta
-        return new AuthUserResponse(
-                user.getUserName(),
-                user.getPassword(),
-                accessToken,
-                "Usuario autenticado exitosamente"
-            );
+        UserEntity userEntity = this.getUserByIdentifier(request.getUserName());
+
+        // Consultar roles del usuario
+        Long userId = userEntity.getId();
+        Long memberId = memberPersistencePort.findByUserId(userId).map(Member::getId).orElse(null);
+        Long ownerId = ownerPersistencePort.findByUserId(userId).map(Owner::getId).orElse(null);
+        Long adminId = administratorPersistencePort.findByUserId(userId).map(Administrator::getId).orElse(null);
+        // Generar y obtener token
+        String accesToken = this.jwtUtils.generateJwtToken(authentication);
+        // Devolvemos un objeto AuthUserResponse
+        return AuthUserResponse.builder()
+                .userName(userEntity.getUserName())
+                .password(userEntity.getPassword())
+                .token(accesToken)
+                .msg("Usuario autenticado exitosamente")
+                .idUser(userId)
+                .idMember(memberId)
+                .idOwner(ownerId)
+                .idAdmin(adminId)
+                .build();
     }
 
     @Override
@@ -117,16 +133,24 @@ public class UserDetailServiceImpl implements IAuthSecurityService {
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(userEntity.getUserName(),
                 userEntity.getPassword(), authorityList);
-
+        // Consultar roles del usuario
+        Long userId = userEntity.getId();
+        Long memberId = memberPersistencePort.findByUserId(userId).map(Member::getId).orElse(null);
+        Long ownerId = ownerPersistencePort.findByUserId(userId).map(Owner::getId).orElse(null);
+        Long adminId = administratorPersistencePort.findByUserId(userId).map(Administrator::getId).orElse(null);
+        // Generar y obtener token
         String accesToken = this.jwtUtils.generateJwtToken(authentication);
-
-        // Retornar la respuesta
-        return new AuthUserResponse(
-                userEntity.getUserName(),
-                userEntity.getPassword(),
-                accesToken,
-                "Usuario registrado exitosamente"
-        );
+        // Devolvemos un objeto AuthUserResponse
+        return AuthUserResponse.builder()
+                .userName(userEntity.getUserName())
+                .password(userEntity.getPassword())
+                .token(accesToken)
+                .msg("Usuario registrado exitosamente")
+                .idUser(userId)
+                .idMember(memberId)
+                .idOwner(ownerId)
+                .idAdmin(adminId)
+                .build();
     }
 
     @Override

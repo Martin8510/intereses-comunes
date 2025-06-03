@@ -1,3 +1,14 @@
+app:
+  file:
+    storage:
+      path: ./uploads
+    base-url: /api/files
+    max-file-size: 5MB
+    allowed-types:
+      - image/jpeg
+      - image/png
+      - image/gif
+
 spring:
   application:
     name: red-social
@@ -29,4 +40,6 @@ security:
   jwt:
     user:
       generator: AUTHOJWT-BACKEND
+
+
 
