@@ -96,6 +96,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",  // Para desarrollo con Vite
                 "http://127.0.0.1:5173",  // Alternativa localhost
+                "http://frontend-container:8080",  // Nombre del contenedor del frontend en Docker
+                "http://localhost:8080",
                 "https://tudominio.com"   // Para producción
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
