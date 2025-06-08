@@ -12,7 +12,7 @@ COPY ./pom.xml  /root
 COPY ./.mvn  /root/.mvn
 COPY ./mvnw  /root
 
-ENV SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/red_social_intereses_comunes
+ENV SPRING_DATASOURCE_URL=jdbc:mysql://mysql_database:3306/red_social_intereses_comunes
 ENV MYSQL_USER=admin
 ENV MYSQL_PASSWORD=12345678
 ENV MYSQL_ROOT_PASSWORD=12345678
