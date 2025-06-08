@@ -16,6 +16,7 @@ ENV SPRING_DATASOURCE_URL=jdbc:mysql://mysql_database:3306/red_social_intereses_
 ENV MYSQL_USER=admin
 ENV MYSQL_PASSWORD=12345678
 ENV MYSQL_ROOT_PASSWORD=12345678
+ENV MYSQL_ROOT_PASSWORD=red_social_intereses_comunes
 
 # DAR PERMISOS DE EJECUCIÓN AL SCRIPT mvnw
 RUN chmod +x ./mvnw
