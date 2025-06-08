@@ -7,16 +7,20 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    environment:
+      MYSQL_BD_URL: jdbc:mysql://mysql_database:3306/red_social_intereses_comunes?createDatabaseIfNotExist=true&serverTimezone=UTC
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 12345678
     networks:
       - spring-network
     depends_on:
-      - mysql
+      - mysql_database
     volumes:
       - spring-upload-volume:/app/uploads
 
-  mysql:
+  mysql_database:
     image: mysql
-    container_name: mysql_database
+    container_name: mysql-database-container
     environment:
       MYSQL_ROOT_PASSWORD: 12345678
       MYSQL_DATABASE: red_social_intereses_comunes

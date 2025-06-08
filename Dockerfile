@@ -12,11 +12,6 @@ COPY ./pom.xml  /root
 COPY ./.mvn  /root/.mvn
 COPY ./mvnw  /root
 
-ENV MYSQL_USER=admin
-ENV MYSQL_PASSWORD=12345678
-ENV MYSQL_ROOT_PASSWORD=12345678
-ENV MYSQL_DATABASE=red_social_intereses_comunes
-
 # DAR PERMISOS DE EJECUCIÓN AL SCRIPT mvnw
 RUN chmod +x ./mvnw
 
