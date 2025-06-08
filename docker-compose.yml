@@ -1,7 +1,6 @@
 services:
-
-  spring-api-img:
-    image: spring-api-img
+  spring-api:
+    image: spring-api
     container_name: spring-api-container
     build:
       context: .
@@ -19,7 +18,6 @@ services:
     image: mysql
     container_name: mysql_database
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_database:3306/red_social_intereses_comunes
       MYSQL_ROOT_PASSWORD: 12345678
       MYSQL_DATABASE: red_social_intereses_comunes
       MYSQL_USER: admin
